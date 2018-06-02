@@ -4,11 +4,13 @@
 --  
 --  github repo link: https://github.com/bhattsameer/space-war
 --
--- Licence = MIT 
+--  Licence = MIT
 
 local math = require 'math'
 require 'conf'
 
+local score = 0
+local t = 0
 
 love.graphics.getDefaultFilter('nearest','nearest')
 enemy = {}
@@ -17,43 +19,65 @@ enemies_controller.enemies = {}
 
 -- load enemy image
 enemies_controller.image = love.graphics.newImage('graphics/enemy.png')
-particle_systems = {}
-particle_systems.list = {}
-particle_systems.image = love.graphics.newImage('graphics/enemy_particle.png')
 
-function particle_systems:spawn(x, y)
-	local ps = {}
-    ps.ps = love.graphics.newParticleSystem(particle_systems.image, 32)
-	ps.x = x
-	ps.y = y
-	ps.ps:setParticleLifetime(2,4)
-	ps.ps:setEmissionRate(5)
-	ps.ps:setSizeVariation(1)
-	ps.ps:setLinearAcceleration(-20, -20, 20, 20)
-	ps.ps:setColors(100,255,100, 255, 0, 255, 0, 255)
-	table.insert(particle_systems.list, ps)
-end
+--
+--particle_systems = {}
+--particle_systems.list = {}
+--particle_systems.image = love.graphics.newImage('graphics/enemy_particle.png')
+--local ps = {}
+--function particle_systems:spawn(x, y)
 
-function particle_systems:draw()
-	for _, v in pairs(particle_systems.list) do
-		love.graphics.draw(v.ps, v.x, v.y)
-	end
-end
+--  ps.ps = love.graphics.newParticleSystem(particle_systems.image, 32)
+--	ps.x = x
+--	ps.y = y
+--	ps.ps:setParticleLifetime(2,4)
+--	ps.ps:setEmissionRate(5)
+--	ps.ps:setSizeVariation(1)
+--	ps.ps:setLinearAcceleration(-20, -20, 20, 20)
+--	ps.ps:setColors(100,255,100, 255, 0, 255, 0, 255)
+--	table.insert(particle_systems.list, ps)
+--end
 
-function particle_systems:update(dt)
-	for _, v in pairs(particle_systems.list) do
-		v.ps:update(dt)
-	end
-end
+--function particle_systems:draw()
+--	for _, v in pairs(particle_systems.list) do
+--		love.graphics.draw(v.ps, v.x, v.y)
+--	end
+--end
+
+--function particle_systems:update(dt)
+--	for _, v in pairs(particle_systems.list) do
+--		v.ps:update(dt)
+--	end
+--end
+
 
 function checkCollisions(enemies, bullets)
 	explosion = love.audio.newSource('sound/explosion.mp3', 'stream')
 	for i, e in ipairs(enemies) do
-		for _, b in pairs(bullets) do
+		for j, b in pairs(bullets) do
 			if b.y <= e.y + e.height and b.x > e.x and b.x < e.x + e.width then
 				love.audio.play(explosion)
-				particle_systems:spawn(e.x, e.y)
+				--particle_systems:spawn(e.x, e.y)
 				table.remove(enemies, i)
+				table.remove(bullets, j)
+				score = score + 1
+				
+				-- more enemies
+				if score < 490 then	
+					w = math.random(0, 700)
+					enemies_controller:spawnEnemy(w , 0)
+				end
+
+				-- boss
+				if score == 500 then
+					enemies_controller.image = love.graphics.newImage('graphics/enemy_particle.png')
+					for i=1,10 do
+						enemies_controller:spawnEnemy(i*75,0)
+						enemies_controller:spawnEnemy(i*75,35)
+						enemies_controller:spawnEnemy(i*75,70)
+						enemies_controller:spawnEnemy(i*75,105)
+					end
+				end
 			end
 		end
 	end
@@ -90,6 +114,7 @@ function love.load()
 			table.insert(player.bullets, bullet)
 		end
 	end
+	
 	for i = 0, 10 do
 		enemies_controller:spawnEnemy(i * 75 , 0)
 	end
@@ -99,7 +124,7 @@ function enemies_controller:spawnEnemy(x, y)
 	enemy = {}
 	enemy.x = x
 	enemy.y = y
-	enemy.width = 25
+	enemy.width = 40
  	enemy.height = 20  
 	enemy.bullets = {}
 	enemy.cooldown = 20
@@ -117,15 +142,9 @@ function enemy:fire()
 	end
 end
 
-local elapsedTime = 0
 function love.update(dt)
-	elapsedTime = elapsedTime + dt
-	-- more enemies
-	
 
-	--
 	player.cooldown = player.cooldown - 1
-
 	if love.keyboard.isDown('right') then
 		--x = x + 1
 		if player.x < 760.5 then
@@ -177,12 +196,19 @@ end
 function love.draw()
 	--draw background
 	love.graphics.draw(backgroundImage)
+	
+	-- font size
+	font = love.graphics.newFont(14)
+	love.graphics.setFont(font)
+	-- score board
+	love.graphics.print('Your score: ' ..score, 340, 583)
+
 	-- win - loose statements 
 	if game_over then
-		love.graphics.print('Game Over!')
+		love.graphics.print('Game Over!', 340, 10)
 		return
 	elseif game_win then
-		love.graphics.print('You Won!')
+		love.graphics.print('You Won!', 340, 10)
 	end
 	
 	-- draw player
@@ -194,6 +220,9 @@ function love.draw()
 	for _,e in pairs(enemies_controller.enemies) do
 		love.graphics.draw(enemies_controller.image, e.x, e.y)
 	end
+
+	--draw enemy fire
+	
 
 	--draw fire
 	love.graphics.setColor(255,255,255)
