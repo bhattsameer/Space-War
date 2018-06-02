@@ -1,4 +1,4 @@
---	Space War 1.0
+--  Space War 1.0
 --  author : Debugger
 --  developed using : lua + lovve 2d 
 --  
