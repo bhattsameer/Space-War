@@ -1,4 +1,4 @@
---  Space War 1.0
+--	Space War 1.0
 --  author : Debugger
 --  developed using : lua + lovve 2d 
 --  
@@ -49,7 +49,7 @@ enemies_controller.image = love.graphics.newImage('graphics/enemy.png')
 --		v.ps:update(dt)
 --	end
 --end
-
+name = 1
 
 function checkCollisions(enemies, bullets)
 	explosion = love.audio.newSource('sound/explosion.mp3', 'stream')
@@ -61,7 +61,6 @@ function checkCollisions(enemies, bullets)
 				table.remove(enemies, i)
 				table.remove(bullets, j)
 				score = score + 1
-				
 				-- more enemies
 				if score < 490 then	
 					w = math.random(0, 700)
@@ -76,6 +75,7 @@ function checkCollisions(enemies, bullets)
 						enemies_controller:spawnEnemy(i*75,35)
 						enemies_controller:spawnEnemy(i*75,70)
 						enemies_controller:spawnEnemy(i*75,105)
+						enemies_controller:spawnEnemy(i*75,140)
 					end
 				end
 			end
@@ -95,8 +95,14 @@ function love.load()
 	backgroundImage = love.graphics.newImage('graphics/starfield.png')
 	--player and fire details
 	player = {}
+	dragging = {}
 	player.x = 0
 	player.y = 550
+	player.width = 110
+	player.height = 110
+	dragging.active = false
+	dragging.x = 0
+	dragging.y = 0
 	player.bullets = {}
 	player.cooldown = 20
 	player.speed = 10
@@ -115,8 +121,26 @@ function love.load()
 		end
 	end
 	
+	-- S
+	--enemies_controller:spawnEnemy(160 ,  40)   -- e.h = 20 e.w= 40
+	--enemies_controller:spawnEnemy(160 ,  10)
+	--enemies_controller:spawnEnemy(120,  10)
+	--enemies_controller:spawnEnemy(80 ,  10)
+	--enemies_controller:spawnEnemy(80 ,  10)
+	--enemies_controller:spawnEnemy(80 ,  40)
+	--enemies_controller:spawnEnemy(80 ,  80)
+	--enemies_controller:spawnEnemy(120 , 100)
+	--enemies_controller:spawnEnemy(160 , 105)
+	--enemies_controller:spawnEnemy(160 , 145)
+	--enemies_controller:spawnEnemy(160 , 180)
+	--enemies_controller:spawnEnemy(120 , 180)
+	--enemies_controller:spawnEnemy(80 , 180)
+	--enemies_controller:spawnEnemy(80 ,  140)
+	
+	
 	for i = 0, 10 do
 		enemies_controller:spawnEnemy(i * 75 , 0)
+		--enemies_controller:spawnEnemy(i * 75 , 40)
 	end
 end
 
@@ -143,10 +167,11 @@ function enemy:fire()
 end
 
 function love.update(dt)
-
 	player.cooldown = player.cooldown - 1
+	
+	--keyboard process
 	if love.keyboard.isDown('right') then
-		--x = x + 1
+		--x = x + 1 
 		if player.x < 760.5 then
 			player.x = player.x + player.speed
 		end
@@ -157,20 +182,33 @@ function love.update(dt)
 			player.x = player.x - player.speed
 		end
 	end
-	if love.keyboard.isDown('up') then
-		if player.y > 0 then
-			player.y = player.y - player.speed
+	--if love.keyboard.isDown('up') then
+	--	if player.y > 0 then
+	--		player.y = player.y - player.speed
+	--	end
+	--end
+	--if love.keyboard.isDown('down') then
+	--	if player.y < 550 then
+	--		player.y = player.y + player.speed
+	--	end
+	--end
+
+	-- mouse controller
+
+	if dragging.active then
+		if player.x > 0  or player.x < 760.5 then
+			player.x = (love.mouse.getX() - dragging.x) - player.speed
 		end
-	end
-	if love.keyboard.isDown('down') then
-		if player.y < 550 then
-			player.y = player.y + player.speed
+		if player.y > 0 or player.y < 550 then
+			player.y = (love.mouse.getY() - dragging.y) - player.speed
 		end
 	end
 
-	if love.keyboard.isDown("space") then
-		player.fire()
-	end
+--	if love.keyboard.isDown("space") then
+	if game_over == false then		
+    	player.fire()
+    end
+--	end
 
 	if #enemies_controller.enemies == 0 then
 		game_win = true
@@ -228,5 +266,19 @@ function love.draw()
 	love.graphics.setColor(255,255,255)
 	for _,v in pairs(player.bullets) do
 		love.graphics.rectangle("fill", v.x, v.y, 10, 10)
+	end
+end
+
+function love.mousepressed(x, y, button, istouch)
+	if button == 1 and x > player.x and x < player.x + player.width and y < player.y + player.height 	then
+		dragging.active = true
+		dragging.x = x - player.x 
+		dragging.y = y - player.y
+	end
+end
+
+function love.mousereleased(x, y, button)
+	if button == 1 then
+		dragging.active = false
 	end
 end
